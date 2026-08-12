@@ -14,8 +14,8 @@
         @drop.prevent="onDrop">
         <div class="text-5xl mb-4">🎙️</div>
         <p class="text-gray-700 font-medium mb-1">Drop an audio file here, or click to browse</p>
-        <p class="text-gray-400 text-sm">Supports MP3, WAV, M4A, OGG (max 25MB)</p>
-        <input ref="fileInput" type="file" accept="audio/*" class="hidden" @change="onFileSelect" />
+        <p class="text-gray-400 text-sm">Supports MP3, WAV, M4A, OGG, FLAC, WEBM, MP4, MPEG, MPGA (max 25MB)</p>
+        <input ref="fileInput" type="file" :accept="AUDIO_EXTENSIONS.map(ext => `.${ext}`).join(',')" :disabled="loading" class="hidden" @change="onFileSelect" />
       </div>
 
       <div v-if="file" class="mt-4 flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3">
@@ -24,7 +24,7 @@
           <div class="font-medium text-gray-800 truncate">{{ file.name }}</div>
           <div class="text-xs text-gray-400">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</div>
         </div>
-        <button @click="file = null" class="text-gray-400 hover:text-gray-600">✕</button>
+        <button @click="file = null" :disabled="loading" aria-label="Remove audio file" class="text-gray-400 hover:text-gray-600 disabled:opacity-50">✕</button>
       </div>
 
       <div class="mt-6">
@@ -119,6 +119,8 @@
 </template>
 
 <script setup lang="ts">
+import { AUDIO_EXTENSIONS, getAudioError } from '~/utils/audio'
+
 interface SummaryResult {
   title: string
   summary: string
@@ -140,15 +142,22 @@ const copied = ref(false)
 
 function onFileSelect(e: Event) {
   const input = e.target as HTMLInputElement
-  file.value = input.files?.[0] ?? null
+  selectFile(input.files?.[0] ?? null)
+  input.value = ''
 }
 
 function onDrop(e: DragEvent) {
-  file.value = e.dataTransfer?.files?.[0] ?? null
+  selectFile(e.dataTransfer?.files?.[0] ?? null)
+}
+
+function selectFile(candidate: File | null) {
+  if (loading.value || !candidate) return
+  error.value = getAudioError(candidate.name, candidate.size) || ''
+  file.value = error.value ? null : candidate
 }
 
 async function process() {
-  if (!file.value) return
+  if (!file.value || loading.value) return
   loading.value = true
   error.value = ''
   progress.value = 10

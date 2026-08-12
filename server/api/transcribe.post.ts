@@ -1,9 +1,9 @@
 import OpenAI from 'openai'
 import { readMultipartFormData } from 'h3'
+import { getAudioError, MAX_AUDIO_BYTES } from '../../utils/audio'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const client = new OpenAI({ apiKey: config.openaiApiKey })
 
   const parts = await readMultipartFormData(event)
   if (!parts || parts.length === 0) {
@@ -15,7 +15,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Missing file field' })
   }
 
-  const filename = filePart.filename || 'audio.mp3'
+  const filename = filePart.filename || ''
+  const validationError = getAudioError(filename, filePart.data.length)
+  if (validationError) {
+    throw createError({
+      statusCode: filePart.data.length > MAX_AUDIO_BYTES ? 413 : 400,
+      message: validationError,
+    })
+  }
+  const client = new OpenAI({ apiKey: config.openaiApiKey })
   const blob = new Blob([filePart.data], { type: filePart.type || 'audio/mpeg' })
   const file = new File([blob], filename)
 
