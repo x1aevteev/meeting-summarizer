@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import { isSummaryResult } from '../../utils/summary'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -36,8 +37,17 @@ ${transcript}`,
     temperature: 0.3,
   })
 
-  const content = response.choices[0].message.content
-  if (!content) throw createError({ statusCode: 500, message: 'No response from OpenAI' })
+  const content = response.choices[0]?.message.content
+  if (!content) throw createError({ statusCode: 502, message: 'No summary returned. Please try again.' })
 
-  return JSON.parse(content)
+  let summary: unknown
+  try {
+    summary = JSON.parse(content)
+  } catch {
+    throw createError({ statusCode: 502, message: 'Invalid summary returned. Please try again.' })
+  }
+  if (!isSummaryResult(summary)) {
+    throw createError({ statusCode: 502, message: 'Incomplete summary returned. Please try again.' })
+  }
+  return summary
 })
