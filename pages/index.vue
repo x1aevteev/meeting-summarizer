@@ -9,7 +9,13 @@
     <div v-if="!result" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
       <div
         class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center transition hover:border-indigo-400 cursor-pointer"
+        role="button"
+        :tabindex="loading ? -1 : 0"
+        :aria-disabled="loading"
+        aria-label="Choose an audio recording"
         @click="fileInput?.click()"
+        @keydown.enter.prevent="fileInput?.click()"
+        @keydown.space.prevent="fileInput?.click()"
         @dragover.prevent
         @drop.prevent="onDrop">
         <div class="text-5xl mb-4">🎙️</div>
@@ -40,17 +46,17 @@
         <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
           <div class="h-full bg-indigo-500 rounded-full transition-all duration-500" :style="{ width: progress + '%' }" />
         </div>
-        <p class="text-xs text-gray-400 mt-1 text-center">{{ stepLabel }}</p>
+        <p role="status" class="text-xs text-gray-400 mt-1 text-center">{{ stepLabel }}</p>
       </div>
 
-      <p v-if="error" class="mt-4 text-red-600 text-sm bg-red-50 rounded-lg p-3">{{ error }}</p>
+      <p v-if="error" role="alert" class="mt-4 text-red-600 text-sm bg-red-50 rounded-lg p-3">{{ error }}</p>
     </div>
 
     <!-- Results -->
     <div v-if="result">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h2 class="text-xl font-bold text-gray-900">{{ result.title }}</h2>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <button @click="copyMarkdown" class="text-sm px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
             {{ copied ? '✓ Copied' : 'Copy MD' }}
           </button>
@@ -62,6 +68,8 @@
           </button>
         </div>
       </div>
+
+      <p v-if="copyError" role="alert" class="mb-4 text-red-600 text-sm">{{ copyError }}</p>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="md:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
@@ -120,15 +128,7 @@
 
 <script setup lang="ts">
 import { AUDIO_EXTENSIONS, getAudioError } from '~/utils/audio'
-
-interface SummaryResult {
-  title: string
-  summary: string
-  keyPoints: string[]
-  actionItems: Array<{ task: string; owner: string; deadline: string }>
-  decisions: string[]
-  duration: string
-}
+import type { SummaryResult } from '~/utils/summary'
 
 const file = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -139,6 +139,9 @@ const error = ref('')
 const transcript = ref('')
 const result = ref<SummaryResult | null>(null)
 const copied = ref(false)
+const copyError = ref('')
+let copyTimer: ReturnType<typeof setTimeout> | undefined
+onUnmounted(() => clearTimeout(copyTimer))
 
 function onFileSelect(e: Event) {
   const input = e.target as HTMLInputElement
@@ -218,9 +221,16 @@ function buildMarkdown(): string {
 }
 
 async function copyMarkdown() {
-  await navigator.clipboard.writeText(buildMarkdown())
-  copied.value = true
-  setTimeout(() => copied.value = false, 2000)
+  clearTimeout(copyTimer)
+  copied.value = false
+  copyError.value = ''
+  try {
+    await navigator.clipboard.writeText(buildMarkdown())
+    copied.value = true
+    copyTimer = setTimeout(() => copied.value = false, 2000)
+  } catch {
+    copyError.value = 'Could not access the clipboard. Use Download MD instead.'
+  }
 }
 
 function downloadMarkdown() {
@@ -234,6 +244,10 @@ function downloadMarkdown() {
 }
 
 function reset() {
+  clearTimeout(copyTimer)
+  copied.value = false
+  copyError.value = ''
+  stepLabel.value = ''
   file.value = null
   result.value = null
   transcript.value = ''
