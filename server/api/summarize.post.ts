@@ -2,10 +2,11 @@ import OpenAI from 'openai'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const { transcript } = await readBody(event)
+  const body = await readBody(event)
+  const transcript = body?.transcript
 
-  if (!transcript) {
-    throw createError({ statusCode: 400, message: 'transcript is required' })
+  if (typeof transcript !== 'string' || !transcript.trim()) {
+    throw createError({ statusCode: 400, message: 'transcript must be a non-empty string' })
   }
 
   const client = new OpenAI({ apiKey: config.openaiApiKey })
