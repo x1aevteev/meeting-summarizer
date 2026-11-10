@@ -179,7 +179,7 @@ async function process() {
     })
     transcript.value = t
     progress.value = 65
-    stepLabel.value = 'Generating summary with GPT-4o...'
+    stepLabel.value = 'Preparing meeting summary...'
 
     const summary = await $fetch<SummaryResult>('/api/summarize', {
       method: 'POST',

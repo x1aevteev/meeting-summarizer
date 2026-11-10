@@ -70,3 +70,7 @@ Tests cover audio validation boundaries and the structured summary response with
 │   └── summarize.post.ts        # GPT-4o analysis
 └── nuxt.config.ts
 ```
+
+## Offline walkthrough
+
+Run `npm install` and `npm run dev`, then upload `public/samples/planning.m4a`. This is a synthetic meeting recording; the server matches its content hash and replays the corresponding transcript and summary from `server/demo.json`. No credentials or network requests to OpenAI are needed. Other recordings require a configured key.

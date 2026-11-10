@@ -1,0 +1,15 @@
+{
+  "sha256": "33bad4d80f726df9648df527729f8bddabcfcb41f67c3966a2244c8e494de901",
+  "transcript": "Alex: The onboarding page is ready for review. Maya, please test the signup flow by Friday. Maya: I will also check mobile layouts. Alex: Great. We agreed to launch on Monday if the signup tests pass.",
+  "summary": {
+    "title": "Onboarding launch planning",
+    "summary": "The onboarding page is ready for review. Maya will test signup and check mobile layouts. The launch is planned for Monday if signup tests pass.",
+    "keyPoints": ["Onboarding page is ready for review", "Signup flow needs testing", "Mobile layouts need a final check"],
+    "actionItems": [
+      { "task": "Test the signup flow", "owner": "Maya", "deadline": "Friday" },
+      { "task": "Check mobile layouts", "owner": "Maya", "deadline": "" }
+    ],
+    "decisions": ["Launch on Monday if signup tests pass"],
+    "duration": "~15 seconds"
+  }
+}
