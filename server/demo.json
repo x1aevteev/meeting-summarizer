@@ -1,0 +1,27 @@
+{
+  "sha256": "847f883530c41952b56e7983ddbadd760c916bd059540926717eabbfe0f397be",
+  "transcript": "Alex: The onboarding page is ready for review. Maya, please test the signup flow by Friday.\nMaya: I will also check mobile layouts.\nAlex: Great. We agreed to launch on Monday if the signup tests pass.",
+  "conversation": [
+    {"speaker":"Alex","text":"The onboarding page is ready for review. Maya, please test the signup flow by Friday."},
+    {"speaker":"Maya","text":"I will also check mobile layouts."},
+    {"speaker":"Alex","text":"Great. We agreed to launch on Monday if the signup tests pass."},
+    {"speaker":"Maya","text":"I'll cover new accounts, expired invitations, and the case where someone tries to register twice."},
+    {"speaker":"Alex","text":"Please check what happens if the confirmation email is delayed. The resend action should be easy to find."},
+    {"speaker":"Maya","text":"I'll test on a narrow viewport as well. The keyboard shouldn't hide the submit button."},
+    {"speaker":"Alex","text":"Let's track blockers separately from cosmetic issues so we can make a clear launch decision."},
+    {"speaker":"Maya","text":"I'll share a checklist and screenshots on Friday afternoon. Any signup blocker goes to you right away."},
+    {"speaker":"Alex","text":"I'll review the checklist before launch. If signup is blocked, we'll postpone and keep the current page live."},
+    {"speaker":"Maya","text":"Sounds good. I'll add the email and mobile checks to the checklist now."}
+  ],
+  "summary": {
+    "title": "Onboarding launch planning",
+    "summary": "The onboarding page is ready for review. Maya will test signup and check mobile layouts. The launch is planned for Monday if signup tests pass.",
+    "keyPoints": ["Onboarding page is ready for review", "Signup flow needs testing", "Mobile layouts need a final check"],
+    "actionItems": [
+      { "task": "Test the signup flow", "owner": "Maya", "deadline": "Friday" },
+      { "task": "Check mobile layouts", "owner": "Maya", "deadline": "" }
+    ],
+    "decisions": ["Launch on Monday if signup tests pass"],
+    "duration": "~15 seconds"
+  }
+}

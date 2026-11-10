@@ -1,4 +1,6 @@
 import OpenAI from 'openai'
+import { createHash } from 'node:crypto'
+import demo from '../demo.json'
 import { readMultipartFormData } from 'h3'
 import { getAudioError, MAX_AUDIO_BYTES } from '../../utils/audio'
 
@@ -22,6 +24,12 @@ export default defineEventHandler(async (event) => {
       statusCode: filePart.data.length > MAX_AUDIO_BYTES ? 413 : 400,
       message: validationError,
     })
+  }
+  if (createHash('sha256').update(filePart.data).digest('hex') === demo.sha256) {
+    return { transcript: demo.transcript, conversation: demo.conversation }
+  }
+  if (!config.openaiApiKey) {
+    throw createError({ statusCode: 503, message: 'For offline playback, upload the included planning.m4a recording.' })
   }
   const client = new OpenAI({ apiKey: config.openaiApiKey })
   const blob = new Blob([filePart.data], { type: filePart.type || 'audio/mpeg' })

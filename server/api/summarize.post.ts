@@ -1,4 +1,5 @@
 import OpenAI from 'openai'
+import demo from '../demo.json'
 import { isSummaryResult } from '../../utils/summary'
 
 export default defineEventHandler(async (event) => {
@@ -10,6 +11,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'transcript must be a non-empty string' })
   }
 
+  if (transcript.trim() === demo.transcript) return demo.summary
+  if (!config.openaiApiKey) {
+    throw createError({ statusCode: 503, message: 'Summarization for other recordings requires an API key.' })
+  }
   const client = new OpenAI({ apiKey: config.openaiApiKey })
 
   const response = await client.chat.completions.create({
