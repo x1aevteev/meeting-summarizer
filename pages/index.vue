@@ -117,10 +117,20 @@
 
       <div class="bg-white rounded-xl border border-gray-200 p-5">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="font-semibold text-gray-800">Transcript</h3>
+          <h3 class="font-semibold text-gray-800">{{ conversation.length ? 'Conversation' : 'Transcript' }}</h3>
           <span class="text-xs text-gray-400">{{ result.duration }}</span>
         </div>
-        <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ transcript }}</p>
+        <ol v-if="conversation.length" class="space-y-3 rounded-xl bg-gray-50 p-4">
+          <li v-for="(message, index) in conversation" :key="index" class="flex"
+              :class="message.speaker === 'Maya' ? 'justify-end' : 'justify-start'">
+            <div class="max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed break-words"
+                 :class="message.speaker === 'Maya' ? 'bg-indigo-100 text-indigo-950' : 'bg-white text-gray-800 border border-gray-200'">
+              <p class="mb-0.5 text-xs font-semibold">{{ message.speaker }}</p>
+              <p>{{ message.text }}</p>
+            </div>
+          </li>
+        </ol>
+        <p v-else class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ transcript }}</p>
       </div>
     </div>
   </div>
@@ -137,6 +147,8 @@ const progress = ref(0)
 const stepLabel = ref('')
 const error = ref('')
 const transcript = ref('')
+type Message = { speaker: string; text: string }
+const conversation = ref<Message[]>([])
 const result = ref<SummaryResult | null>(null)
 const copied = ref(false)
 const copyError = ref('')
@@ -170,14 +182,15 @@ async function process() {
     const form = new FormData()
     form.append('file', file.value)
 
-    stepLabel.value = 'Transcribing with Whisper...'
+    stepLabel.value = 'Preparing transcript...'
     progress.value = 30
 
-    const { transcript: t } = await $fetch<{ transcript: string }>('/api/transcribe', {
+    const { transcript: t, conversation: messages } = await $fetch<{ transcript: string; conversation?: Message[] }>('/api/transcribe', {
       method: 'POST',
       body: form,
     })
     transcript.value = t
+    conversation.value = messages ?? []
     progress.value = 65
     stepLabel.value = 'Preparing meeting summary...'
 
@@ -251,6 +264,7 @@ function reset() {
   file.value = null
   result.value = null
   transcript.value = ''
+  conversation.value = []
   error.value = ''
   progress.value = 0
 }

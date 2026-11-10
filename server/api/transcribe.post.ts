@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     })
   }
   if (createHash('sha256').update(filePart.data).digest('hex') === demo.sha256) {
-    return { transcript: demo.transcript }
+    return { transcript: demo.transcript, conversation: demo.conversation }
   }
   if (!config.openaiApiKey) {
     throw createError({ statusCode: 503, message: 'For offline playback, upload the included planning.m4a recording.' })
