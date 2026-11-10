@@ -52,6 +52,23 @@
       <p v-if="error" role="alert" class="mt-4 text-red-600 text-sm bg-red-50 rounded-lg p-3">{{ error }}</p>
     </div>
 
+    <section v-if="!result" aria-labelledby="recent-meetings" class="mt-8">
+      <h2 id="recent-meetings" class="mb-3 text-lg font-bold text-gray-900">Recent meetings</h2>
+      <ul class="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <li v-for="meeting in meetings" :key="meeting.id">
+          <button type="button" :disabled="loading" @click="openMeeting(meeting)"
+                  class="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-indigo-50 focus-visible:bg-indigo-50 disabled:opacity-50">
+            <span aria-hidden="true" class="rounded-lg bg-indigo-100 px-3 py-2 text-indigo-700">≡</span>
+            <span class="min-w-0 flex-1">
+              <span class="block font-medium text-gray-900">{{ meeting.summary.title }}</span>
+              <span class="block text-sm text-gray-500">{{ meeting.summary.duration }} · {{ meeting.summary.actionItems.length }} {{ meeting.summary.actionItems.length === 1 ? 'action item' : 'action items' }}</span>
+            </span>
+            <span aria-hidden="true" class="text-indigo-600">→</span>
+          </button>
+        </li>
+      </ul>
+    </section>
+
     <!-- Results -->
     <div v-if="result">
       <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -64,7 +81,7 @@
             Download MD
           </button>
           <button @click="reset" class="text-sm px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-            New Recording
+            Back to recordings
           </button>
         </div>
       </div>
@@ -122,9 +139,9 @@
         </div>
         <ol v-if="conversation.length" class="space-y-3 rounded-xl bg-gray-50 p-4">
           <li v-for="(message, index) in conversation" :key="index" class="flex"
-              :class="message.speaker === 'Maya' ? 'justify-end' : 'justify-start'">
+              :class="message.speaker !== conversation[0]?.speaker ? 'justify-end' : 'justify-start'">
             <div class="max-w-[85%] rounded-2xl px-4 py-2 text-sm leading-relaxed break-words"
-                 :class="message.speaker === 'Maya' ? 'bg-indigo-100 text-indigo-950' : 'bg-white text-gray-800 border border-gray-200'">
+                 :class="message.speaker !== conversation[0]?.speaker ? 'bg-indigo-100 text-indigo-950' : 'bg-white text-gray-800 border border-gray-200'">
               <p class="mb-0.5 text-xs font-semibold">{{ message.speaker }}</p>
               <p>{{ message.text }}</p>
             </div>
@@ -139,6 +156,7 @@
 <script setup lang="ts">
 import { AUDIO_EXTENSIONS, getAudioError } from '~/utils/audio'
 import type { SummaryResult } from '~/utils/summary'
+import { exampleMeetings, type Meeting, type Message } from '~/utils/meeting-history'
 
 const file = ref<File | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -147,13 +165,20 @@ const progress = ref(0)
 const stepLabel = ref('')
 const error = ref('')
 const transcript = ref('')
-type Message = { speaker: string; text: string }
 const conversation = ref<Message[]>([])
 const result = ref<SummaryResult | null>(null)
+const meetings = ref<Meeting[]>([...exampleMeetings])
 const copied = ref(false)
 const copyError = ref('')
 let copyTimer: ReturnType<typeof setTimeout> | undefined
 onUnmounted(() => clearTimeout(copyTimer))
+
+function openMeeting(meeting: Meeting) {
+  reset()
+  transcript.value = meeting.transcript
+  conversation.value = meeting.conversation
+  result.value = meeting.summary
+}
 
 function onFileSelect(e: Event) {
   const input = e.target as HTMLInputElement
@@ -200,6 +225,10 @@ async function process() {
     })
     progress.value = 100
     result.value = summary
+    meetings.value = [
+      { id: crypto.randomUUID(), transcript: t, conversation: messages ?? [], summary },
+      ...meetings.value,
+    ].slice(0, 10)
   } catch (e: any) {
     error.value = e?.data?.message || 'Something went wrong. Check your OpenAI API key.'
   } finally {
